@@ -14,8 +14,11 @@ ENV_PREFIX="${ENV_PREFIX:-$BASE/envs/rlvr}"
 export PIP_CACHE_DIR="${PIP_CACHE_DIR:-$BASE/.cache/pip}"
 
 if ! command -v conda >/dev/null 2>&1; then
-    echo "conda not found. Load your cluster's conda/anaconda module first, or install"
-    echo "Miniconda under \$SCRATCH. Then re-run this script."
+    echo "conda not found on PATH. Either load your cluster's conda module, or, for a"
+    echo "Miniconda you installed yourself (e.g. in a Singularity overlay), put it on PATH:"
+    echo "    export PATH=/ext3/miniconda3/bin:\$PATH"
+    echo "Sourcing .../etc/profile.d/conda.sh alone is not enough: it only defines a shell"
+    echo "function in the current shell, which this script (a child process) does not see."
     exit 1
 fi
 

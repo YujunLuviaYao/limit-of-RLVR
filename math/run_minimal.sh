@@ -29,7 +29,7 @@ MAX_TOKENS="${MAX_TOKENS:-16000}"
 SEED="${SEED:-1}"
 TEMPLATE="${TEMPLATE:-qwen-boxed}"
 OUT_ROOT="${OUT_ROOT:-$SCRIPT_DIR/minimal_out}"
-CKPT_TMP="${CKPT_TMP:-/tmp/rlvr_ckpt_$USER}"
+CKPT_TMP="${CKPT_TMP:-/tmp/rlvr_ckpt_$(id -un)}"
 
 if [ "${1:-}" = "--smoke" ]; then
     echo ">>> Smoke test mode"

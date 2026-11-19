@@ -12,7 +12,7 @@
 #   N_SAMPLING  128      TEMPERATURE 0.6     TOP_P 0.95     MAX_TOKENS 16000
 #   SEED 1      TEMPLATE qwen-boxed          CHUNK_SIZE 50
 #   MODELS_DIR  where models are downloaded (default: $SCRATCH/models or ~/models)
-#   OUT_ROOT    where results go (default: main_out/)
+#   OUT_ROOT    where results go (default: $SCRATCH/rlvr/main_out, or main_out/ without $SCRATCH)
 
 set -euo pipefail
 
@@ -35,6 +35,7 @@ SEED="${SEED:-1}"
 TEMPLATE="${TEMPLATE:-qwen-boxed}"
 CHUNK_SIZE="${CHUNK_SIZE:-50}"
 MODELS_DIR="${MODELS_DIR:-${SCRATCH:-$HOME}/models}"
+OUT_ROOT="${OUT_ROOT:-${SCRATCH:+$SCRATCH/rlvr/main_out}}"
 OUT_ROOT="${OUT_ROOT:-$SCRIPT_DIR/main_out}"
 
 DATA_FILE="$DATA_DIR/$BENCHMARK/test.jsonl"

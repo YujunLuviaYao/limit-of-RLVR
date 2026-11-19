@@ -1,39 +1,111 @@
-# Main experiment on a Slurm cluster
+# Main experiment on NYU HPC (Slurm + Singularity)
 
 Base vs. RL model (Qwen2.5-7B vs. SimpleRL-Zoo-7B), 200 MATH500 problems sampled in
 proportion to the five difficulty levels, n = 128 samples per problem, temperature 0.6,
 top-p 0.95, up to 16k tokens (the paper's MATH500 setup).
 
-All commands run from `limit-of-RLVR/math`.
+Jobs run inside a Singularity container; the Python environment lives in an ext3 overlay.
+The code can stay in `/home`, but everything large goes to `$SCRATCH`:
 
-1. **Environment (once, on a login node).**
-   ```bash
-   module load anaconda3        # or however your cluster provides conda
-   bash setup_env.sh            # creates $SCRATCH/envs/rlvr
-   conda activate $SCRATCH/envs/rlvr
-   ```
-   Then check it on a GPU node (fill in account/partition in the file first):
-   `sbatch slurm/env_check.sbatch` runs a 2-problem smoke test with Qwen2.5-0.5B;
-   the log `slurm/rlvr-envcheck_<job>.out` should end with pass@k numbers.
-2. **Subset (already committed).** `subsets/math500_strat200_seed0/` was made with
-   `python make_subset.py`; regenerate only to change size or seed.
-3. **Models (on a login node if compute nodes have no internet).**
-   ```bash
-   huggingface-cli download Qwen/Qwen2.5-7B --local-dir $SCRATCH/models/Qwen2.5-7B
-   huggingface-cli download hkust-nlp/Qwen-2.5-7B-SimpleRL-Zoo --local-dir $SCRATCH/models/SimpleRL-Zoo-7B
-   ```
-4. **Submit.** Fill in the account/partition lines in `slurm/main_experiment.sbatch`, then
-   ```bash
-   sbatch slurm/main_experiment.sbatch
-   ```
-   One array task per model, one GPU each (>= 24 GB). Logs: `slurm/rlvr-main_<job>_<task>.out`.
-   If a task hits the time limit, resubmit the same command: finished chunks are skipped.
-5. **pass@k.**
-   ```bash
-   python passk_minimal.py --plot main_out/passk.png \
-       'Qwen2.5-7B=main_out/Qwen2.5-7B/chunk_*/math500/*.jsonl' \
-       'SimpleRL-Zoo-7B=main_out/SimpleRL-Zoo-7B/chunk_*/math500/*.jsonl'
-   ```
+| What | Default location | Override with |
+|---|---|---|
+| Container image | `/scratch/work/public/singularity/cuda12.1.1-cudnn8.9.0-devel-ubuntu22.04.2.sif` | `SIF` |
+| Overlay | `$SCRATCH/rlvr/overlay-25GB-500K.ext3` | `OVERLAY` |
+| Miniconda (in overlay) | `/ext3/miniconda3` | `CONDA_ROOT` |
+| Conda env (in overlay) | `/ext3/envs/rlvr` | `CONDA_ENV` |
+| Models | `$SCRATCH/models` | `MODELS_DIR` |
+| HF cache | `$SCRATCH/hf_cache` | `HF_HOME` |
+| Main results | `$SCRATCH/rlvr/main_out` | `OUT_ROOT` |
+| Env-check results | `$SCRATCH/rlvr/envcheck_out` | `OUT_ROOT` |
 
-`run_main.sh` sets `KEEP_MODEL_DIR=1`, so `math_eval.py` no longer deletes the model
-directory it loads (the original pipeline deletes it because it evaluates a throwaway copy).
+Defaults are set in `slurm/singularity_env.sh`; export a variable before `sbatch` to change it.
+
+## 1. One-time environment setup (login node)
+
+**Copy an overlay** (25 GB, 500K files) to scratch and unzip it. The public overlay
+templates live under `/scratch/work/public/overlay-fs-ext3/` (see the NYU HPC docs if the
+name has changed):
+```bash
+mkdir -p $SCRATCH/rlvr
+cp /scratch/work/public/overlay-fs-ext3/overlay-25GB-500K.ext3.gz $SCRATCH/rlvr/
+gunzip $SCRATCH/rlvr/overlay-25GB-500K.ext3.gz
+```
+
+**Enter the container with the overlay writable (`:rw`)** so you can install into it.
+Only one process may have the overlay open read-write, so close any other session using it:
+```bash
+singularity exec --overlay $SCRATCH/rlvr/overlay-25GB-500K.ext3:rw \
+    /scratch/work/public/singularity/cuda12.1.1-cudnn8.9.0-devel-ubuntu22.04.2.sif /bin/bash
+```
+
+**Inside the container**, install Miniconda into the overlay:
+```bash
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh
+bash /tmp/miniconda.sh -b -p /ext3/miniconda3
+```
+
+**Still inside the container**, put conda on PATH (sourcing `conda.sh` alone is not
+enough for `setup_env.sh`, which runs as a child process) and create the env:
+```bash
+export PATH=/ext3/miniconda3/bin:$PATH
+cd ~/limit-of-RLVR/math
+ENV_PREFIX=/ext3/envs/rlvr bash setup_env.sh
+exit
+```
+`setup_env.sh` installs vLLM 0.6.3 (with torch 2.4), transformers<4.48, math-verify,
+latex2sympy and the other evaluation dependencies, and prints the vLLM/torch versions.
+
+## 2. Slurm settings
+
+Fill in `--account` and `--partition` in `slurm/env_check.sbatch` and
+`slurm/main_experiment.sbatch` (currently commented placeholders: remove the extra `#`).
+
+## 3. Check the environment on a GPU node
+
+Compute nodes may have no internet, so download the test model on a login node first:
+```bash
+huggingface-cli download Qwen/Qwen2.5-0.5B --local-dir $SCRATCH/models/Qwen2.5-0.5B
+```
+(`huggingface-cli` is in the conda env; on the login node run it inside the container, or
+install `huggingface_hub` for your user.) Then, from `~/limit-of-RLVR/math`:
+```bash
+sbatch slurm/env_check.sbatch
+```
+It runs a 2-problem, n=2 smoke test with Qwen2.5-0.5B inside the container (overlay mounted
+read-only, `--nv` for the GPU). The log `slurm/rlvr-envcheck_<job>.out` should show
+`cuda ok: True` and end with pass@k numbers.
+
+## 4. Main experiment
+
+Download the two 7B models (login node):
+```bash
+huggingface-cli download Qwen/Qwen2.5-7B --local-dir $SCRATCH/models/Qwen2.5-7B
+huggingface-cli download hkust-nlp/Qwen-2.5-7B-SimpleRL-Zoo --local-dir $SCRATCH/models/SimpleRL-Zoo-7B
+```
+Submit:
+```bash
+sbatch slurm/main_experiment.sbatch
+```
+One array task per model, one GPU each (>= 24 GB), both sharing the read-only overlay.
+Logs: `slurm/rlvr-main_<job>_<task>.out`. If a task hits the time limit, resubmit the same
+command: finished chunks (50 problems each) are skipped. A shorter `--time` (e.g. 3 h)
+may get scheduled sooner, since the run resumes anyway.
+
+## 5. pass@k
+
+```bash
+singularity exec --overlay $SCRATCH/rlvr/overlay-25GB-500K.ext3:ro \
+    /scratch/work/public/singularity/cuda12.1.1-cudnn8.9.0-devel-ubuntu22.04.2.sif /bin/bash -c '
+    export PATH=/ext3/miniconda3/bin:$PATH && source /ext3/miniconda3/etc/profile.d/conda.sh
+    conda activate /ext3/envs/rlvr && cd ~/limit-of-RLVR/math
+    python passk_minimal.py --plot $SCRATCH/rlvr/main_out/passk.png \
+        "Qwen2.5-7B=$SCRATCH/rlvr/main_out/Qwen2.5-7B/chunk_*/math500/*.jsonl" \
+        "SimpleRL-Zoo-7B=$SCRATCH/rlvr/main_out/SimpleRL-Zoo-7B/chunk_*/math500/*.jsonl"'
+```
+
+## Notes
+
+- `run_main.sh` sets `KEEP_MODEL_DIR=1`, so `math_eval.py` does not delete the model
+  directory it loads (the original pipeline deletes it because it evaluates a throwaway copy).
+- `run_minimal.sh` (used by the env check) copies the model to `/tmp` on the compute node
+  first, so the original download is never deleted.
