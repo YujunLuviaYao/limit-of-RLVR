@@ -137,6 +137,9 @@ def setup(args):
             seed=args.seed,
             gpu_memory_utilization=0.9,
             max_model_len=32768,
+            # "auto" uses the model's bfloat16; set VLLM_DTYPE=half on GPUs without
+            # bfloat16 support (e.g. T4).
+            dtype=os.environ.get("VLLM_DTYPE", "auto"),
         )
         tokenizer = None
         if args.apply_chat_template:
