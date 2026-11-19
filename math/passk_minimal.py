@@ -3,11 +3,15 @@
 Usage:
     python passk_minimal.py [--plot out.png] NAME=path/to/results.jsonl [NAME2=...]
 
+A path may be a glob (quote it), e.g. 'NAME=main_out/Qwen2.5-7B/chunk_*/math500/*.jsonl',
+to combine the chunk files written by run_main.sh. Problems are de-duplicated by `idx`.
+
 Each jsonl line produced by math_eval.py has a `score` field: a list of n bools,
 one per sampled response. pass@k uses the unbiased estimator from Chen et al. (2021):
     pass@k = 1 - C(n-c, k) / C(n, k)
 """
 import argparse
+import glob
 import json
 
 import numpy as np
@@ -19,9 +23,18 @@ def pass_at_k(n, c, k):
     return 1.0 - np.prod(1.0 - k / np.arange(n - c + 1, n + 1))
 
 
-def load_scores(path):
-    with open(path) as f:
-        return [[bool(x) for x in json.loads(line)["score"]] for line in f if line.strip()]
+def load_samples(pattern):
+    paths = sorted(glob.glob(pattern))
+    if not paths:
+        raise SystemExit(f"No files match {pattern}")
+    samples = {}
+    for path in paths:
+        with open(path) as f:
+            for line in f:
+                if line.strip():
+                    d = json.loads(line)
+                    samples[d["idx"]] = d
+    return [samples[i] for i in sorted(samples)]
 
 
 def main():
@@ -33,7 +46,8 @@ def main():
     curves = {}
     for run in args.runs:
         name, path = run.split("=", 1)
-        scores = load_scores(path)
+        samples = load_samples(path)
+        scores = [[bool(x) for x in d["score"]] for d in samples]
         n = min(len(s) for s in scores)
         ks = [k for k in (1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024) if k <= n]
         correct = [sum(s[:n]) for s in scores]
@@ -44,6 +58,10 @@ def main():
         print("  " + "  ".join(f"pass@{k}={v:.3f}" for k, v in curve.items()))
         print(f"  #correct per problem: {correct}")
         print(f"  never solved: {sum(c == 0 for c in correct)}/{len(correct)}")
+        reasons = [r for d in samples for r in d.get("finish_reason", [])]
+        if reasons:
+            n_len = sum(r == "length" for r in reasons)
+            print(f"  truncated (finish_reason=length): {n_len}/{len(reasons)} responses")
 
     if args.plot:
         try:

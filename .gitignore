@@ -1,2 +1,5 @@
 static/.DS_Store
-math/examples/math_eval/EVAL/checkpoints/math/minimal_out/
+math/examples/math_eval/EVAL/checkpoints/
+math/minimal_out/
+math/main_out/
+math/slurm/*.out

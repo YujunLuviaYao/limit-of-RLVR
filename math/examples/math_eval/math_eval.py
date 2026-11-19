@@ -151,8 +151,11 @@ def setup(args):
             use_safetensors=args.use_safetensors,
         )
 
-    # delete model_name_or_path
-    os.system(f"rm -rf {args.model_name_or_path}")
+    # delete model_name_or_path (the original pipeline evaluates a throwaway copy).
+    # Set KEEP_MODEL_DIR=1 to keep the model directory, e.g. when loading it directly
+    # from a local download or the HF cache.
+    if os.environ.get("KEEP_MODEL_DIR") != "1":
+        os.system(f"rm -rf {args.model_name_or_path}")
 
     # infer & eval
     results = []
