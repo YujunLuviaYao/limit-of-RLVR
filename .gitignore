@@ -6,3 +6,4 @@ math/slurm/*.out
 __pycache__/
 *.egg-info/
 math/envcheck_out/
+math/audit_out/
