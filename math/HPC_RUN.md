@@ -6,8 +6,15 @@ top-p 0.95, up to 16k tokens (the paper's MATH500 setup).
 
 All commands run from `limit-of-RLVR/math`.
 
-1. **Environment (once).** Reuse the env from the smoke test if you have one
-   (`pip install matplotlib` is the only addition), or create one: `bash setup_env.sh`.
+1. **Environment (once, on a login node).**
+   ```bash
+   module load anaconda3        # or however your cluster provides conda
+   bash setup_env.sh            # creates $SCRATCH/envs/rlvr
+   conda activate $SCRATCH/envs/rlvr
+   ```
+   Then check it on a GPU node (fill in account/partition in the file first):
+   `sbatch slurm/env_check.sbatch` runs a 2-problem smoke test with Qwen2.5-0.5B;
+   the log `slurm/rlvr-envcheck_<job>.out` should end with pass@k numbers.
 2. **Subset (already committed).** `subsets/math500_strat200_seed0/` was made with
    `python make_subset.py`; regenerate only to change size or seed.
 3. **Models (on a login node if compute nodes have no internet).**

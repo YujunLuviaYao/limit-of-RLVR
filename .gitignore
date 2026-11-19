@@ -5,3 +5,4 @@ math/main_out/
 math/slurm/*.out
 __pycache__/
 *.egg-info/
+math/envcheck_out/

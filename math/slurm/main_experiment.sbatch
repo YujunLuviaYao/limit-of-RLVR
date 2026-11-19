@@ -30,7 +30,7 @@ ENTRY="${MODELS[$SLURM_ARRAY_TASK_ID]}"
 
 # Python environment: either submit from a shell where it is already active
 # (sbatch passes your environment to the job), or set CONDA_ENV, e.g.
-#   CONDA_ENV=rlvr sbatch slurm/main_experiment.sbatch
+#   CONDA_ENV=$SCRATCH/envs/rlvr sbatch slurm/main_experiment.sbatch
 if [ -n "${CONDA_ENV:-}" ]; then
     eval "$(conda shell.bash hook)"
     conda activate "$CONDA_ENV"

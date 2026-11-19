@@ -29,7 +29,7 @@ MAX_TOKENS="${MAX_TOKENS:-16000}"
 SEED="${SEED:-1}"
 TEMPLATE="${TEMPLATE:-qwen-boxed}"
 OUT_ROOT="${OUT_ROOT:-$SCRIPT_DIR/minimal_out}"
-SCRATCH="${SCRATCH:-/tmp/rlvr_ckpt}"
+CKPT_TMP="${CKPT_TMP:-/tmp/rlvr_ckpt_$USER}"
 
 if [ "${1:-}" = "--smoke" ]; then
     echo ">>> Smoke test mode"
@@ -40,7 +40,7 @@ if [ "${1:-}" = "--smoke" ]; then
     OUT_ROOT="$OUT_ROOT/smoke"
 fi
 
-mkdir -p "$MODELS_DIR" "$OUT_ROOT" "$SCRATCH"
+mkdir -p "$MODELS_DIR" "$OUT_ROOT" "$CKPT_TMP"
 cd "$EVAL_DIR"
 
 for entry in $MODELS; do
@@ -53,7 +53,7 @@ for entry in $MODELS; do
         huggingface-cli download "$repo" --local-dir "$src"
     fi
 
-    ckpt="$SCRATCH/$name"
+    ckpt="$CKPT_TMP/$name"
     rm -rf "$ckpt"
     echo ">>> Copying $src -> $ckpt (math_eval.py deletes the model dir it loads)"
     cp -r "$src" "$ckpt"
