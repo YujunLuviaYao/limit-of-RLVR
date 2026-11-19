@@ -33,7 +33,7 @@ conda activate "$ENV_PREFIX"
 # datasets>=3: older datasets (e.g. 2.14) fails to import with current pyarrow.
 pip install vllm==0.6.3 "transformers<4.48" "math-verify[antlr4_11_0]==0.6.0" \
     word2number Pebble sympy==1.12 timeout-decorator \
-    jieba "datasets>=3" matplotlib huggingface_hub
+    jieba "datasets>=3" matplotlib "huggingface_hub<1.0"
 # latex2sympy (used by the authors' grader) pins antlr4-python3-runtime==4.11.1 and upgrades it
 # from 4.11.0. This matches the authors' eval_math_nodes.sh, which also ends with 4.11.1. pip
 # then warns that math-verify wants 4.11.0; the warning is harmless (both are ANTLR 4.11
