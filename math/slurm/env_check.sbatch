@@ -4,7 +4,7 @@
 # Submit from the math/ directory:
 #   cd ~/limit-of-RLVR/math && sbatch slurm/env_check.sbatch
 # Compute nodes may have no internet: download the model on a login node first:
-#   huggingface-cli download Qwen/Qwen2.5-0.5B --local-dir $SCRATCH/models/Qwen2.5-0.5B
+#   python download_model.py Qwen/Qwen2.5-0.5B $SCRATCH/models/Qwen2.5-0.5B   (inside the container)
 # Image / overlay / conda env paths: see slurm/singularity_env.sh (override via env vars).
 #SBATCH --job-name=rlvr-envcheck
 #SBATCH --nodes=1

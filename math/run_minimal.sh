@@ -50,7 +50,7 @@ for entry in $MODELS; do
 
     if [ ! -f "$src/config.json" ]; then
         echo ">>> Downloading $repo -> $src"
-        huggingface-cli download "$repo" --local-dir "$src"
+        python "$SCRIPT_DIR/download_model.py" "$repo" "$src"
     fi
 
     ckpt="$CKPT_TMP/$name"

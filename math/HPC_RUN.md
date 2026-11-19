@@ -64,10 +64,11 @@ Fill in `--account` and `--partition` in `slurm/env_check.sbatch` and
 
 Compute nodes may have no internet, so download the test model on a login node first:
 ```bash
-huggingface-cli download Qwen/Qwen2.5-0.5B --local-dir $SCRATCH/models/Qwen2.5-0.5B
+python download_model.py Qwen/Qwen2.5-0.5B $SCRATCH/models/Qwen2.5-0.5B
 ```
-(`huggingface-cli` is in the conda env; on the login node run it inside the container, or
-install `huggingface_hub` for your user.) Then, from `~/limit-of-RLVR/math`:
+(Run it inside the container with the env active, from `~/limit-of-RLVR/math`; it uses
+`huggingface_hub.snapshot_download`, which works whatever `huggingface_hub` version is
+installed.) Then, from `~/limit-of-RLVR/math`:
 ```bash
 sbatch slurm/env_check.sbatch
 ```
@@ -77,10 +78,10 @@ read-only, `--nv` for the GPU). The log `slurm/rlvr-envcheck_<job>.out` should s
 
 ## 4. Main experiment
 
-Download the two 7B models (login node):
+Download the two 7B models (login node, inside the container as in step 3):
 ```bash
-huggingface-cli download Qwen/Qwen2.5-7B --local-dir $SCRATCH/models/Qwen2.5-7B
-huggingface-cli download hkust-nlp/Qwen-2.5-7B-SimpleRL-Zoo --local-dir $SCRATCH/models/SimpleRL-Zoo-7B
+python download_model.py Qwen/Qwen2.5-7B $SCRATCH/models/Qwen2.5-7B
+python download_model.py hkust-nlp/Qwen-2.5-7B-SimpleRL-Zoo $SCRATCH/models/SimpleRL-Zoo-7B
 ```
 Submit:
 ```bash

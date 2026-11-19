@@ -47,7 +47,7 @@ NUM=$(wc -l < "$DATA_FILE")
 MODEL_PATH="$MODELS_DIR/$NAME"
 if [ ! -f "$MODEL_PATH/config.json" ]; then
     echo ">>> Downloading $REPO -> $MODEL_PATH"
-    huggingface-cli download "$REPO" --local-dir "$MODEL_PATH"
+    python "$SCRIPT_DIR/download_model.py" "$REPO" "$MODEL_PATH"
 fi
 
 export CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-0}"

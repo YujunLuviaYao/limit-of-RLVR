@@ -32,7 +32,7 @@ conda activate "$ENV_PREFIX"
 # so pinning 4.11.1 in the same command makes pip fail to resolve.
 pip install vllm==0.6.3 "transformers<4.48" "math-verify[antlr4_11_0]==0.6.0" \
     word2number Pebble sympy==1.12 timeout-decorator \
-    jieba datasets matplotlib "huggingface_hub[cli]"
+    jieba datasets matplotlib huggingface_hub
 # latex2sympy (used by the authors' grader) pins antlr4-python3-runtime==4.11.1 and upgrades it
 # from 4.11.0. This matches the authors' eval_math_nodes.sh, which also ends with 4.11.1. pip
 # then warns that math-verify wants 4.11.0; the warning is harmless (both are ANTLR 4.11
