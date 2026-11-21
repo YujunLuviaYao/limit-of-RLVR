@@ -104,6 +104,24 @@ singularity exec --overlay $SCRATCH/rlvr/overlay-25GB-500K.ext3:ro \
         "SimpleRL-Zoo-7B=$SCRATCH/rlvr/main_out/SimpleRL-Zoo-7B/chunk_*/math500/*.jsonl"'
 ```
 
+## 6. The remaining 300 problems (full MATH500)
+
+`subsets/math500_rest300/` holds every MATH500 problem that is not in the 200-problem subset
+(made with `python make_subset.py --rest_of subsets/math500_strat200_seed0`). Fill in the
+account/partition lines in `slurm/main_experiment_rest300.sbatch` as in step 2, then:
+```bash
+sbatch slurm/main_experiment_rest300.sbatch
+```
+Results go to `$SCRATCH/rlvr/main_out_rest300` (separate folder, because chunk folders are
+numbered within each subset). Problems keep their MATH500 `idx`, so pass@k over all 500 problems
+just globs both folders:
+```bash
+python passk_minimal.py --plot $SCRATCH/rlvr/passk_all500.png \
+    "Qwen2.5-7B=$SCRATCH/rlvr/main_out*/Qwen2.5-7B/chunk_*/math500/*.jsonl" \
+    "SimpleRL-Zoo-7B=$SCRATCH/rlvr/main_out*/SimpleRL-Zoo-7B/chunk_*/math500/*.jsonl"
+```
+(run inside the container as in step 5).
+
 ## Notes
 
 - `run_main.sh` sets `KEEP_MODEL_DIR=1`, so `math_eval.py` does not delete the model
