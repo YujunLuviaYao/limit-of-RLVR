@@ -26,6 +26,10 @@ Usage (math/ directory, evaluation environment active, no GPU needed):
         'SimpleRL-Zoo-7B=$SCRATCH/rlvr/main_out*/SimpleRL-Zoo-7B/chunk_*/math500/*.jsonl' \\
         --out_dir $SCRATCH/rlvr/annotation
 
+Batches: you can annotate in two batches, e.g. first from the 200-problem results and later
+from the remaining 300, with proportional sizes (40% / 60%), different --id_prefix and seed,
+and --shared 0 for the second batch. Problems in each batch keep their MATH500 idx.
+
 Writes to --out_dir:
     sheet_all.csv            every item (the 'assignee' column says who labels it)
     sheet_<annotator>.csv    the shared items plus that annotator's own items
@@ -125,6 +129,8 @@ def main():
     ap.add_argument("--shared", type=int, default=20, help="items every annotator labels")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--tail_chars", type=int, default=1500)
+    ap.add_argument("--id_prefix", default="item",
+                    help="prefix of item ids; use a different one per batch (e.g. b1, b2)")
     args = ap.parse_args()
 
     rng = random.Random(args.seed)
@@ -167,7 +173,7 @@ def main():
     # blind order, ids, assignment
     rng.shuffle(items)
     for k, it in enumerate(items, 1):
-        it["item_id"] = f"item{k:04d}"
+        it["item_id"] = f"{args.id_prefix}{k:04d}"
     annotators = [a.strip() for a in args.annotators.split(",") if a.strip()]
     by_source = defaultdict(list)
     for it in items:
