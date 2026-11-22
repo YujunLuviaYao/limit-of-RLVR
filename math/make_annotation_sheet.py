@@ -78,10 +78,22 @@ def repetitive(text, span=30, times=5):
     return counts.most_common(1)[0][1] >= times
 
 
+def gt_in(gt, text):
+    """Ground truth occurs in text as a whole token (so '10' does not match '100' or 'x_{10}')."""
+    g, t = norm(gt), norm(text)
+    if not g:
+        return False
+    pat = re.escape(g)
+    if re.fullmatch(r"-?[\d.]+", g):
+        pat = r"(?<![\d._{^])" + pat + r"(?![\d.]*\d)"
+    return re.search(pat, t) is not None
+
+
 def prelabel_no_box(text, gt):
     before = text.split(CODE_FENCE)[0]
-    if gt and (norm(gt) in norm(before) or mv_verify(gt, before)):
-        return "A?", "ground truth appears before the first code block"
+    tail = before[-400:]  # where a conclusion before the code would be
+    if gt and (gt_in(gt, tail) or mv_verify(gt, tail)):
+        return "A?", "ground truth appears near the end of the text before the first code block"
     if "```python" in text:
         return "B?", "has a Python code block, no final answer found before it"
     if repetitive(text):
