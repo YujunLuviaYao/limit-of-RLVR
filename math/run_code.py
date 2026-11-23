@@ -79,14 +79,20 @@ def _limits():
     os.setsid()
 
 
+# The child sees exactly the packages of this interpreter (sympy needs mpmath, which may live
+# outside the env's site-packages), and nothing from the response's working directory.
+CHILD_ENV = {"PATH": "/usr/bin:/bin", "OMP_NUM_THREADS": "1", "MPLBACKEND": "Agg",
+             "PYTHONPATH": os.pathsep.join(p for p in sys.path if p and os.path.isdir(p)
+                                           and os.path.abspath(p) != HERE)}
+
+
 def execute(code, timeout):
     with tempfile.TemporaryDirectory() as d:
+        env = dict(CHILD_ENV, HOME=d)
         try:
-            p = subprocess.run([sys.executable, "-I", "-c", RUNNER], input=code, cwd=d,
+            p = subprocess.run([sys.executable, "-c", RUNNER], input=code, cwd=d,
                                capture_output=True, text=True, timeout=timeout,
-                               preexec_fn=_limits, env={"PATH": "/usr/bin:/bin", "HOME": d,
-                                                        "OMP_NUM_THREADS": "1",
-                                                        "MPLBACKEND": "Agg"})
+                               preexec_fn=_limits, env=env)
         except subprocess.TimeoutExpired:
             return "timeout", ""
     lines = [l.strip() for l in p.stdout.splitlines() if l.strip()]
