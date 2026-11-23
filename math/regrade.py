@@ -267,23 +267,42 @@ def _work(args):
     return revise(text, gt, s, fr)
 
 
-def progress_map(fn, jobs, workers, every=5000, chunksize=32):
-    """Ordered parallel map that prints progress (so a stuck or killed job is visible)."""
+def progress_map(fn, jobs, workers, every=5000, task_timeout=60, on_timeout=None):
+    """Ordered parallel map with progress output and a hard time limit per job.
+
+    A job that exceeds task_timeout seconds (e.g. sympy stuck in C code, which SIGALRM cannot
+    interrupt) has its worker process killed and gets the result on_timeout.
+    """
     import time
-    t0, res = time.time(), []
+    from concurrent.futures import TimeoutError as FutTimeout
+    t0, res, n_to = time.time(), [], 0
+
+    def tick():
+        if len(res) % every == 0:
+            print(f"    {len(res)}/{len(jobs)}  {time.time() - t0:.0f}s  (timeouts: {n_to})", flush=True)
+
     if workers > 1:
-        from multiprocessing import Pool
-        with Pool(workers, maxtasksperchild=2000) as pool:
-            for r in pool.imap(fn, jobs, chunksize=chunksize):
-                res.append(r)
-                if len(res) % every == 0:
-                    print(f"    {len(res)}/{len(jobs)}  {time.time() - t0:.0f}s", flush=True)
+        from pebble import ProcessPool
+        with ProcessPool(max_workers=workers, max_tasks=2000) as pool:
+            it = pool.map(fn, jobs, timeout=task_timeout).result()
+            while True:
+                try:
+                    res.append(next(it))
+                except StopIteration:
+                    break
+                except FutTimeout:
+                    res.append(on_timeout)
+                    n_to += 1
+                except Exception as e:  # worker crashed (e.g. out of memory)
+                    res.append(on_timeout)
+                    n_to += 1
+                    print(f"    job failed: {type(e).__name__}: {e}", flush=True)
+                tick()
     else:
         for j in jobs:
             res.append(fn(j))
-            if len(res) % every == 0:
-                print(f"    {len(res)}/{len(jobs)}  {time.time() - t0:.0f}s", flush=True)
-    print(f"    done {len(jobs)} in {time.time() - t0:.0f}s", flush=True)
+            tick()
+    print(f"    done {len(jobs)} in {time.time() - t0:.0f}s  (timeouts/failures: {n_to})", flush=True)
     return res
 
 
@@ -293,7 +312,12 @@ def regrade_file(problems, workers):
         frs = d.get("finish_reason") or [None] * len(d["code"])
         for t, s, fr in zip(d["code"], d["score"], frs):
             jobs.append((t, d["gt"], bool(s), fr))
-    res = progress_map(_work, jobs, workers)
+    # originally-correct responses need no work; only the others go to the pool
+    todo = [i for i, j in enumerate(jobs) if not j[2]]
+    out = progress_map(_work, [jobs[i] for i in todo], workers, on_timeout=(False, "", None))
+    res = [(True, "orig", None)] * len(jobs)
+    for i, r in zip(todo, out):
+        res[i] = r
     k = 0
     for d in problems:
         n = len(d["code"])

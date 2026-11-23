@@ -150,7 +150,8 @@ def states_answer(text, gt):
 
 def pool_map(fn, jobs, workers):
     from regrade import progress_map
-    return progress_map(fn, jobs, workers, every=2000, chunksize=4)
+    return progress_map(fn, jobs, workers, every=2000, task_timeout=120,
+                        on_timeout=("error", "timeout (grading)"))
 
 
 def run_items(args):
