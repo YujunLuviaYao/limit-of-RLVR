@@ -1,0 +1,188 @@
+item_id,label,source,annotators,notes
+b1_0001,C,single,ganlin,
+b1_0002,B,single,haotong,method correct
+b1_0003,D,single,yujun,
+b1_0004,A,single,ganlin,
+b1_0005,A,single,haotong,
+b1_0006,C,single,yujun,"repetition, method correct"
+b1_0007,C,single,ganlin,repetition
+b1_0008,C,review,haotong,review by yujun (was C); 但是他给了socalled结果，是error，是错的，那就是C
+b1_0009,A,single,yujun,
+b1_0010,B,single,ganlin,method correct
+b1_0011,A,single,haotong,
+b1_0012,C,single,yujun,
+b1_0013,C,single,ganlin,repetition
+b1_0014,A,single,haotong,
+b1_0015,C,single,yujun,
+b1_0016,C,single,ganlin,
+b1_0017,C,single,haotong,repetition
+b1_0018,C,single,yujun,
+b1_0019,C,single,ganlin,
+b1_0020,B,single,haotong,method correct
+b1_0021,C,single,yujun,
+b1_0022,C,single,ganlin,
+b1_0023,C,single,haotong,
+b1_0024,C,single,yujun,
+b1_0025,B,single,ganlin,
+b1_0026,A,review,haotong,review by yujun (was A)
+b1_0027,C,single,yujun,
+b1_0028,B,single,ganlin,method correct
+b1_0029,D,single,haotong,
+b1_0030,C,single,yujun,
+b1_0031,C,single,ganlin,
+b1_0032,C,single,haotong,
+b1_0033,D,single,yujun,
+b1_0034,C,single,ganlin,
+b1_0035,A,single,haotong,
+b1_0036,D,single,yujun,
+b1_0037,B,single,ganlin,method correct
+b1_0038,C,single,haotong,repetition
+b1_0039,C,single,yujun,
+b1_0040,C,single,ganlin,
+b1_0041,D,single,haotong,
+b1_0042,B,single,yujun,would give the right answer with Python
+b1_0043,C,single,ganlin,
+b1_0044,C,single,haotong,
+b1_0045,C,single,yujun,
+b1_0046,C,single,ganlin,
+b1_0047,B,review,haotong,review by yujun (was C)
+b1_0048,B,single,yujun,"Python tested, correct"
+b1_0049,A,single,ganlin,
+b1_0050,A,single,haotong,
+b1_0051,C,single,yujun,
+b1_0052,C,single,ganlin,
+b1_0053,C,single,haotong,repetition
+b1_0054,C,single,yujun,
+b1_0055,C,review,ganlin,review by yujun (was C)
+b1_0056,A,single,haotong,
+b1_0057,C,single,yujun,
+b1_0058,B,single,ganlin,method correct
+b1_0059,C,single,haotong,repetition
+b1_0060,B,single,yujun,
+b1_0061,C,single,ganlin,
+b1_0062,C,single,haotong,repetition
+b1_0063,C,single,yujun,
+b1_0064,C,single,ganlin,repetition
+b1_0065,A,single,haotong,
+b1_0066,C,single,yujun,
+b1_0067,A,single,ganlin,
+b1_0068,D,single,haotong,
+b1_0069,C,single,yujun,
+b1_0070,D,single,ganlin,
+b1_0071,C,single,haotong,
+b1_0072,D,single,yujun,
+b1_0073,D,single,ganlin,
+b1_0074,C,single,haotong,
+b1_0075,C,single,yujun,
+b1_0076,C,single,ganlin,repetition
+b1_0077,B,single,haotong,method correct
+b1_0078,C,single,yujun,
+b1_0079,C,review,ganlin,review by yujun (was C)
+b1_0080,C,single,haotong,
+b1_0081,C,single,yujun,
+b1_0082,C,single,ganlin,
+b1_0083,C,single,haotong,repetition
+b1_0084,C,single,yujun,
+b1_0085,C,single,ganlin,repetition
+b1_0086,D,single,haotong,
+b1_0087,C,single,yujun,给了错误的答案
+b1_0088,B,single,ganlin,method correct
+b1_0089,C,single,haotong,repetition
+b1_0090,C,single,yujun,fabricated output counts as answer (team rule)
+b1_0091,C,single,ganlin,repetition
+b1_0092,D,single,haotong,
+b1_0093,C,single,yujun,陷入循环，没给答案
+b1_0094,C,single,ganlin,repetition
+b1_0095,A,single,haotong,
+b1_0096,C,single,yujun,陷入循环，没给答案
+b1_0097,C,review,ganlin,review by yujun (was C); 编造的输出就是他给出的答案，无关是否boxed，都应该是C
+b1_0098,D,review,haotong,review by yujun (was A)
+b1_0099,C,single,yujun,
+b1_0100,C,single,ganlin,repetition
+b1_0101,A,single,haotong,
+b1_0102,C,single,yujun,
+b1_0103,C,single,ganlin,
+b1_0104,A,single,haotong,
+b1_0105,C,single,yujun,
+b1_0106,C,single,ganlin,repetition
+b1_0107,B,single,haotong,
+b1_0108,C,single,yujun,
+b1_0109,C,single,ganlin,
+b1_0110,C,single,haotong,repetition
+b1_0111,B,single,yujun,
+b1_0112,B,review,ganlin,review by yujun (was C)
+b1_0113,C,single,haotong,repetition
+b1_0114,C,single,yujun,是正的，但给的是负数，abs是对的
+b1_0115,D,single,ganlin,
+b1_0116,C,single,haotong,
+b1_0117,C,single,yujun,
+b1_0118,D,single,ganlin,
+b1_0119,B,single,haotong,method correct
+b1_0120,C,single,yujun,
+b1_0121,A,single,ganlin,
+b1_0122,D,single,haotong,
+b1_0123,B,single,yujun,"Python ran, correct"
+b1_0124,D,single,ganlin,
+b1_0125,C,single,haotong,repetition
+b1_0126,C,single,yujun,"fabricated wrong output, code itself correct"
+b1_0127,C,single,ganlin,
+b1_0128,B,single,haotong,method correct
+b1_0129,D,single,yujun,"boxed \textbf{(B)}, equivalent"
+b1_0130,B,single,ganlin,method correct
+b1_0131,C,single,haotong,
+b1_0132,A,single,yujun,
+b1_0133,C,single,ganlin,
+b1_0134,B,single,haotong,
+b1_0135,A,single,yujun,
+b1_0136,C,single,ganlin,repetition
+b1_0137,D,review,haotong,review by yujun (was A)
+b1_0138,B,single,yujun,22500/2500就是9，但没有出现9
+b1_0139,C,single,ganlin,
+b1_0140,A,single,haotong,
+b1_0141,C,single,yujun,
+b1_0142,A,single,ganlin,
+b1_0143,B,single,haotong,
+b1_0144,B,single,yujun,
+b1_0145,D,single,ganlin,
+b1_0146,C,single,haotong,
+b1_0147,B,single,yujun,
+b1_0148,A,single,ganlin,
+b1_0149,C,single,haotong,repetition
+b1_0150,A,shared_unanimous,"yujun,ganlin,haotong",A/A/A
+b1_0151,B,single,yujun,
+b1_0152,D,shared_unanimous,"yujun,ganlin,haotong",D/D/D
+b1_0153,B,single,ganlin,method correct
+b1_0154,D,shared_unanimous,"yujun,ganlin,haotong",D/D/D
+b1_0155,C,single,haotong,
+b1_0156,C,single,yujun,
+b1_0157,D,shared_unanimous,"yujun,ganlin,haotong",D/D/D
+b1_0158,C,single,ganlin,repetition
+b1_0159,A,single,haotong,
+b1_0160,B,single,yujun,python incorrect
+b1_0161,C,single,ganlin,
+b1_0162,C,single,haotong,
+b1_0163,D,shared_unanimous,"yujun,ganlin,haotong",D/D/D
+b1_0164,C,single,yujun,
+b1_0165,B,single,ganlin,method correct
+b1_0166,C,single,haotong,
+b1_0167,B,single,yujun,
+b1_0168,C,shared_unanimous,"yujun,ganlin,haotong",C/C/C
+b1_0169,B,single,ganlin,method correct
+b1_0170,C,single,haotong,repetition
+b1_0171,C,shared_unanimous,"yujun,ganlin,haotong",C/C/C
+b1_0172,C,shared_unanimous,"yujun,ganlin,haotong",C/C/C
+b1_0173,C,single,yujun,
+b1_0174,D,shared_majority,"yujun,ganlin,haotong",D/D/A
+b1_0175,C,single,ganlin,repetition
+b1_0176,A,single,haotong,
+b1_0177,C,shared_unanimous,"yujun,ganlin,haotong",C/C/C
+b1_0178,C,shared_unanimous,"yujun,ganlin,haotong",C/C/C
+b1_0179,C,shared_unanimous,"yujun,ganlin,haotong",C/C/C
+b1_0180,B,shared_unanimous,"yujun,ganlin,haotong",B/B/B
+b1_0181,C,shared_unanimous,"yujun,ganlin,haotong",C/C/C
+b1_0182,D,shared_unanimous,"yujun,ganlin,haotong",D/D/D
+b1_0183,A,shared_unanimous,"yujun,ganlin,haotong",A/A/A
+b1_0184,C,shared_unanimous,"yujun,ganlin,haotong",C/C/C
+b1_0185,B,shared_unanimous,"yujun,ganlin,haotong",B/B/B
+b1_0186,D,shared_unanimous,"yujun,ganlin,haotong",D/D/D
+b1_0187,B,shared_unanimous,"yujun,ganlin,haotong",B/B/B
