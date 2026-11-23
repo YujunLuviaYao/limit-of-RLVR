@@ -267,18 +267,33 @@ def _work(args):
     return revise(text, gt, s, fr)
 
 
+def progress_map(fn, jobs, workers, every=5000, chunksize=32):
+    """Ordered parallel map that prints progress (so a stuck or killed job is visible)."""
+    import time
+    t0, res = time.time(), []
+    if workers > 1:
+        from multiprocessing import Pool
+        with Pool(workers, maxtasksperchild=2000) as pool:
+            for r in pool.imap(fn, jobs, chunksize=chunksize):
+                res.append(r)
+                if len(res) % every == 0:
+                    print(f"    {len(res)}/{len(jobs)}  {time.time() - t0:.0f}s", flush=True)
+    else:
+        for j in jobs:
+            res.append(fn(j))
+            if len(res) % every == 0:
+                print(f"    {len(res)}/{len(jobs)}  {time.time() - t0:.0f}s", flush=True)
+    print(f"    done {len(jobs)} in {time.time() - t0:.0f}s", flush=True)
+    return res
+
+
 def regrade_file(problems, workers):
     jobs = []
     for d in problems:
         frs = d.get("finish_reason") or [None] * len(d["code"])
         for t, s, fr in zip(d["code"], d["score"], frs):
             jobs.append((t, d["gt"], bool(s), fr))
-    if workers > 1:
-        from multiprocessing import Pool
-        with Pool(workers) as pool:
-            res = pool.map(_work, jobs, chunksize=64)
-    else:
-        res = [_work(j) for j in jobs]
+    res = progress_map(_work, jobs, workers)
     k = 0
     for d in problems:
         n = len(d["code"])
@@ -296,14 +311,20 @@ def run_regrade(args):
     summary = []
     for run in args.runs:
         name, pattern = run.split("=", 1)
-        problems = load(pattern)
-        print(f"{name}: {len(problems)} problems, re-grading ...", flush=True)
-        problems = regrade_file(problems, args.workers)
         out = os.path.join(args.out_dir, name, "math500")
-        os.makedirs(out, exist_ok=True)
-        with open(os.path.join(out, "regraded.jsonl"), "w") as f:
-            for d in problems:
-                f.write(json.dumps(d, ensure_ascii=False) + "\n")
+        path = os.path.join(out, "regraded.jsonl")
+        if os.path.exists(path) and not args.overwrite:  # resume after a killed job
+            print(f"{name}: {path} exists, reusing it (--overwrite to redo)", flush=True)
+            problems = load(path)
+        else:
+            problems = load(pattern)
+            print(f"{name}: {len(problems)} problems, re-grading ...", flush=True)
+            problems = regrade_file(problems, args.workers)
+            os.makedirs(out, exist_ok=True)
+            with open(path + ".tmp", "w") as f:
+                for d in problems:
+                    f.write(json.dumps(d, ensure_ascii=False) + "\n")
+            os.replace(path + ".tmp", path)
         rules = Counter(r for d in problems for r in d["revised_rule"])
         n = sum(len(d["score"]) for d in problems)
         p_old = sum(sum(d["score_orig"]) for d in problems) / n
@@ -377,6 +398,7 @@ def main():
     ap.add_argument("runs", nargs="*", help="NAME=glob of math_eval.py result files (quote it)")
     ap.add_argument("--out_dir", default="regraded_out")
     ap.add_argument("--workers", type=int, default=1)
+    ap.add_argument("--overwrite", action="store_true", help="redo models already re-graded")
     ap.add_argument("--validate", default=None, help="final label CSV (item_id,label,...)")
     ap.add_argument("--items", default=None, help="items_full.jsonl of the same batch")
     ap.add_argument("--key", default=None, help="key.csv of the same batch (optional, per-model table)")

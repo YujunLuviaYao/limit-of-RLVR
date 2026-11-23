@@ -149,11 +149,8 @@ def states_answer(text, gt):
 
 
 def pool_map(fn, jobs, workers):
-    if workers > 1:
-        from multiprocessing import Pool
-        with Pool(workers) as p:
-            return p.map(fn, jobs, chunksize=16)
-    return [fn(j) for j in jobs]
+    from regrade import progress_map
+    return progress_map(fn, jobs, workers, every=2000, chunksize=4)
 
 
 def run_items(args):
