@@ -1,9 +1,10 @@
 """Turn the annotation sheets into readable HTML pages, one per annotator.
 
 The CSVs keep the raw LaTeX, which is hard to read. This page renders the math (MathJax),
-shows code blocks as code, and highlights every \\boxed{...} answer in yellow, so the boxed
+shows code blocks as code (and, in batch 2, the real output of running the code with a
+second question, code_ok), and highlights every \\boxed{...} answer in yellow, so the boxed
 part stays easy to spot. Labels can be entered on the page: they are saved in the browser as
-you go, and "Download labels" gives a CSV (item_id, label, annotator, notes) to hand back.
+you go, and "Download labels" gives a CSV (item_id, label, code_ok, annotator, notes) to hand back.
 
 Usage (math/ directory; no GPU, only the Python standard library):
     python make_annotation_html.py $SCRATCH/rlvr/annotation_b1
@@ -63,6 +64,7 @@ window.MathJax = {
   textarea { width:100%; min-height:38px; }
   details summary { cursor:pointer; color:var(--accent); }
   .all { color:#c2410c; font-weight:600; }
+  .coderun { border-left:3px solid var(--accent); padding-left:10px; }
 </style>
 </head>
 <body>
@@ -104,11 +106,17 @@ function render(text) {
     return '<div class="text">' + esc(p) + '</div>';
   }).join('');
 }
+function isDone(it) {
+  const s = saved[it.item_id] || {};
+  return !!s.label && (!it.code_run || !!s.code_ok);
+}
 function card(it) {
   const s = saved[it.item_id] || {};
   const radios = ['A','B','C','D'].map(l =>
     `<label><input type="radio" name="l_${it.item_id}" value="${l}" ${s.label===l?'checked':''}> ${l}</label>`).join('');
-  return `<div class="card ${s.label?'done':''}" id="c_${it.item_id}">
+  const codeRadios = ['Y','N'].map(l =>
+    `<label><input type="radio" name="k_${it.item_id}" value="${l}" ${s.code_ok===l?'checked':''}> ${l}</label>`).join('');
+  return `<div class="card ${isDone(it)?'done':''}" id="c_${it.item_id}">
     <div class="meta">${esc(it.item_id)} · MATH500 idx ${esc(it.idx)} · level ${esc(it.level)}
       ${it.assignee==='ALL' ? ' · <span class="all">三人共同标注</span>' : ''}</div>
     <div class="row"><span class="lab">题目</span><div class="text">${esc(it.question)}</div></div>
@@ -119,8 +127,12 @@ function card(it) {
     <div class="row"><span class="lab">第一段代码之前（最后一部分）</span>${render(it.before_first_code_block)}</div>
     <div class="row"><span class="lab">回答结尾</span>${render(it.response_tail)}</div>
     <details class="row"><summary>展开完整回答</summary>${render(it.full)}</details>
-    <div class="row prelabel">脚本建议：${esc(it.prelabel)}（${esc(it.prelabel_reason)}）——仅供参考</div>
-    <div class="row labels">${radios}</div>
+    ${it.prelabel ? `<div class="row prelabel">脚本建议：${esc(it.prelabel)}（${esc(it.prelabel_reason)}）——仅供参考</div>` : ''}
+    <div class="row labels"><span class="lab">标签：</span>${radios}</div>
+    ${it.code_run ? `<div class="row coderun"><span class="lab">代码实际运行的输出（我们替模型运行的，不是模型自己写的）</span>
+      <pre><code>${esc(it.code_run)}</code></pre>
+      <div class="labels"><span class="lab">code_ok：</span>${codeRadios}
+      <span class="meta">Y = 代码确实在算题目问的量，且这个输出就是正确答案；N = 其他情况（输出错、运行失败、只是中间量碰巧等于答案等）</span></div></div>` : ''}
     <textarea placeholder="notes（拿不准的原因；B 类方法正确写 method correct）">${esc(s.notes||'')}</textarea>
   </div>`;
 }
@@ -130,8 +142,9 @@ main.querySelectorAll('.text').forEach(el => { el.innerHTML = markRawBoxed(el.in
 items.forEach(it => {
   const c = document.getElementById('c_' + it.item_id);
   c.querySelectorAll('input[type=radio]').forEach(r => r.addEventListener('change', () => {
-    saved[it.item_id] = Object.assign(saved[it.item_id] || {}, {label: r.value});
-    c.classList.add('done'); save();
+    const field = r.name.startsWith('k_') ? 'code_ok' : 'label';
+    saved[it.item_id] = Object.assign(saved[it.item_id] || {}, {[field]: r.value});
+    c.classList.toggle('done', isDone(it)); save();
   }));
   c.querySelector('textarea').addEventListener('input', e => {
     saved[it.item_id] = Object.assign(saved[it.item_id] || {}, {notes: e.target.value}); save();
@@ -141,15 +154,15 @@ const who = document.getElementById('who');
 who.value = saved.__who || '';
 who.addEventListener('input', () => { saved.__who = who.value; save(); });
 function progress() {
-  const n = items.filter(it => (saved[it.item_id] || {}).label).length;
+  const n = items.filter(isDone).length;
   document.getElementById('progress').textContent = `已标 ${n} / ${items.length}`;
 }
 progress();
 document.getElementById('dl').addEventListener('click', () => {
   const q = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
-  const rows = [['item_id','label','annotator','notes'].join(',')].concat(items.map(it => {
+  const rows = [['item_id','label','code_ok','annotator','notes'].join(',')].concat(items.map(it => {
     const s = saved[it.item_id] || {};
-    return [it.item_id, s.label || '', saved.__who || '', s.notes || ''].map(q).join(',');
+    return [it.item_id, s.label || '', s.code_ok || '', saved.__who || '', s.notes || ''].map(q).join(',');
   }));
   const blob = new Blob(['﻿' + rows.join('\n')], {type: 'text/csv'});
   const a = document.createElement('a');
